@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test de Personalidad</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#6a11cb,#2575fc);
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    background:white;
+    max-width:850px;
+    margin:auto;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.25);
+}
+
+h1{text-align:center;}
+
+.question{
+    margin-bottom:20px;
+    padding:15px;
+    background:#f4f6ff;
+    border-radius:12px;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    background:#2575fc;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+    margin-top:10px;
+}
+
+button:hover{background:#1b5ed8;}
+
+.result{
+    margin-top:25px;
+    padding:20px;
+    background:#f8f9ff;
+    border-radius:15px;
+    text-align:center;
+}
+
+canvas{
+    margin-top:20px;
+}
+
+.legend{
+    text-align:left;
+    margin-top:20px;
+}
+
+.legend div{
+    margin-bottom:8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>🧠 Test de Personalidad</h1>
+
+<form id="form"></form>
+
+<button onclick="calcular()">Ver Resultado</button>
+
+<div id="resultado"></div>
+
+</div>
+
+<script>
+
+const preguntas = [
+"Cuando trabajo en equipo yo…",
+"Si hay un problema yo…",
+"En una reunión normalmente…",
+"Me considero una persona…",
+"Cuando me dan una tarea…",
+"Bajo presión yo…",
+"En conflictos suelo…",
+"Me molesta más cuando…",
+"En el trabajo soy más…",
+"Cuando tomo decisiones…",
+"Mis compañeros dicen que soy…",
+"Lo que más valoro es…"
+];
+
+const opciones = [
+["Tomo el control y decido","Motivo al grupo y hablo mucho","Escucho y apoyo a los demás","Analizo antes de opinar"],
+["Actúo rápido","Busco apoyo y lo hablo","Trato de mantener la calma","Analizo causas y soluciones"],
+["Voy directo al punto","Participo activamente","Prefiero escuchar","Observo y tomo notas"],
+["Decidida","Entusiasta","Comprensiva","Detallista"],
+["Quiero resultados rápidos","Me emociona compartirla","Me adapto a lo que pidan","Pido instrucciones claras"],
+["Me enfoco en resolver","Hablo para liberar tensión","Busco apoyo","Me concentro aún más"],
+["Confrontar","Expresarme emocionalmente","Evitar discusiones","Analizar antes de actuar"],
+["Pierdo tiempo","Me ignoran","Hay tensión o conflicto","Algo no está bien hecho"],
+["Competitivo","Sociable","Cooperativo","Preciso"],
+["Decido rápido","Me dejo llevar por emoción","Pienso en los demás","Analizo pros y contras"],
+["Líder","Alegre","Confiable","Meticuloso"],
+["Lograr objetivos","Las relaciones","La armonía","La exactitud"]
+];
+
+const letras = ["A","B","C","D"];
+
+const nombres = {
+A:"Dominante",
+B:"Expresivo",
+C:"Afable",
+D:"Analítico"
+};
+
+const colores = {
+A:"#e74c3c",
+B:"#f1c40f",
+C:"#2ecc71",
+D:"#3498db"
+};
+
+const descripciones = {
+A:"🔴 Dominante: Decidido, líder natural y orientado a resultados. Reto: impaciencia.",
+B:"🟡 Expresivo: Sociable, entusiasta y comunicador. Reto: distracción.",
+C:"🟢 Afable: Empático, colaborador y paciente. Reto: evita conflictos.",
+D:"🔵 Analítico: Lógico, detallista y organizado. Reto: perfeccionismo."
+};
+
+const form = document.getElementById("form");
+
+preguntas.forEach((p,i)=>{
+    let div=document.createElement("div");
+    div.className="question";
+    div.innerHTML=`<strong>${i+1}. ${p}</strong><br>`;
+    opciones[i].forEach((op,j)=>{
+        div.innerHTML+=`<label>
+        <input type="radio" name="p${i}" value="${letras[j]}">
+        ${letras[j]}) ${op}
+        </label><br>`;
+    });
+    form.appendChild(div);
+});
+
+function calcular(){
+
+let conteo={A:0,B:0,C:0,D:0};
+let respuestas=document.querySelectorAll("input[type='radio']:checked");
+
+if(respuestas.length<12){
+    alert("Responde todas las preguntas");
+    return;
+}
+
+respuestas.forEach(r=>{
+    conteo[r.value]++;
+});
+
+let orden=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
+let principal=orden[0][0];
+
+let total=12;
+
+let html=`<div class="result">`;
+html+=`<h2 style="color:${colores[principal]}">Tu tipo predominante es ${nombres[principal]}</h2>`;
+html+=`<p>${descripciones[principal]}</p>`;
+
+html+=`<canvas id="grafico" width="300" height="300"></canvas>`;
+
+html+="<div class='legend'>";
+
+Object.entries(conteo).forEach(([k,v])=>{
+    let porcentaje=Math.round((v/total)*100);
+    html+=`<div style="color:${colores[k]}">
+            ● ${nombres[k]} – ${porcentaje}%
+            </div>`;
+});
+
+html+="</div>";
+
+html+="<h3>🏆 Ranking</h3>";
+orden.forEach((r,i)=>{
+    html+=`${i+1}° Lugar: ${nombres[r[0]]} (${r[1]} respuestas)<br>`;
+});
+
+html+="</div>";
+
+document.getElementById("resultado").innerHTML=html;
+
+// DIBUJAR GRÁFICO CIRCULAR
+const canvas=document.getElementById("grafico");
+const ctx=canvas.getContext("2d");
+
+let startAngle=0;
+
+Object.entries(conteo).forEach(([k,v])=>{
+    let sliceAngle=(v/total)*2*Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(150,150);
+    ctx.arc(150,150,150,startAngle,startAngle+sliceAngle);
+    ctx.closePath();
+    ctx.fillStyle=colores[k];
+    ctx.fill();
+    startAngle+=sliceAngle;
+});
+
+}
+
+</script>
+
+</body>
+</html>
